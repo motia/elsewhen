@@ -53,6 +53,17 @@
     .flow-step { background:var(--color-surface-raised); border:1px solid var(--color-border); border-radius:10px; padding:8px 10px; }
     .arrow { color:var(--color-primary-strong); }
 
+    .api-setup { margin-bottom:24px; padding:16px 18px; background:var(--color-primary-soft); border:1px solid var(--color-primary-border); border-radius:18px; }
+    .api-setup-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:12px; }
+    .api-setup-title { font-size:14px; font-weight:750; }
+    .api-setup-copy { margin-top:3px; color:var(--color-text-secondary); font-size:12px; }
+    .api-grid { display:grid; grid-template-columns:1fr 1fr .82fr; gap:10px; }
+    .api-field { display:grid; gap:5px; font-size:11px; color:var(--color-text-secondary); font-weight:650; }
+    .api-field input { min-width:0; width:100%; height:42px; border:1px solid var(--color-border); border-radius:11px; padding:0 11px; outline:0; background:var(--color-surface-raised); color:var(--color-text); font-family:inherit; font-size:13px; }
+    .api-field input:focus { border-color:var(--color-primary-strong); box-shadow:0 0 0 3px rgba(207,195,245,.48); }
+    .api-ready { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; padding-top:2px; color:var(--color-text-muted); font-size:12px; }
+    .api-ready.ready { color:#526b2d; }
+
     .workspace { display:grid; grid-template-columns:minmax(0,1.02fr) minmax(380px,.98fr); gap:24px; align-items:start; }
     .card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:22px; padding:20px; }
     .card.raised { background:var(--color-surface-raised); border-color:rgba(183,167,232,.72); box-shadow:var(--shadow); }
@@ -177,6 +188,8 @@
 
     @media (max-width:880px) {
       .intro,.workspace { grid-template-columns:1fr; }
+      .api-grid { grid-template-columns:1fr 1fr; }
+      .api-field:last-child { grid-column:1 / -1; }
       .flow { align-self:auto; }
       .state-grid { height:340px; }
     }
@@ -194,6 +207,9 @@
       .marker .face { font-size:24px; }
       .marker .theme-glyph { width:22px; height:22px; font-size:12px; }
       .theme-controls,.fields { grid-template-columns:1fr; }
+      .api-setup-head { display:grid; gap:8px; }
+      .api-grid { grid-template-columns:1fr; }
+      .api-field:last-child { grid-column:auto; }
       .x-left { left:36px; }
       .x-right { right:25px; }
       .event-top { align-items:flex-start; }
@@ -220,9 +236,30 @@
         <div class="flow-row">
           <span class="flow-step">2D interests + free slots</span><span class="arrow">→</span>
           <span class="flow-step">Tavily search</span><span class="arrow">→</span>
-          <span class="flow-step">OpenRouter · Gemini 3.8 Flash</span><span class="arrow">→</span>
+          <span class="flow-step">OpenRouter parsing</span><span class="arrow">→</span>
           <span class="flow-step">Top 3</span>
         </div>
+      </div>
+    </section>
+
+    <section class="api-setup" aria-labelledby="apiSetupTitle">
+      <div class="api-setup-head">
+        <div>
+          <div class="api-setup-title" id="apiSetupTitle">Hackathon API setup</div>
+          <div class="api-setup-copy">Paste temporary keys to run the demo. They stay in this tab only and are sent directly to Tavily and OpenRouter.</div>
+        </div>
+        <div class="api-ready" id="apiReady"><span class="dot"></span><span>Keys needed</span></div>
+      </div>
+      <div class="api-grid">
+        <label class="api-field">Tavily API key
+          <input id="tavilyKey" type="password" placeholder="tvly-…" autocomplete="off" spellcheck="false" />
+        </label>
+        <label class="api-field">OpenRouter API key
+          <input id="openRouterKey" type="password" placeholder="sk-or-v1-…" autocomplete="off" spellcheck="false" />
+        </label>
+        <label class="api-field">OpenRouter model
+          <input id="openRouterModel" value="google/gemini-2.5-flash" autocomplete="off" spellcheck="false" />
+        </label>
       </div>
     </section>
 
