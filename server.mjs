@@ -168,7 +168,7 @@ async function recommendations(location, preferences = {}) {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const aiResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: { authorization: `Bearer ${openRouterKey}`, 'content-type': 'application/json', 'x-title': 'DayShape' },
+      headers: { authorization: `Bearer ${openRouterKey}`, 'content-type': 'application/json', 'x-title': 'ElseWhen' },
       body: JSON.stringify({ model: OPENROUTER_MODEL, temperature: 0.2, messages, response_format: { type: 'json_object' } })
     });
     if (!aiResponse.ok) throw new Error(`OpenRouter request failed (${aiResponse.status})`);
@@ -281,4 +281,4 @@ const server = createServer(async (req, res) => {
   }
 });
 
-server.listen(port, '0.0.0.0', () => console.log(`DayShape running at http://localhost:${port}`));
+server.listen(port, '0.0.0.0', () => console.log(`ElseWhen running at http://localhost:${port}`));

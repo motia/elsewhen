@@ -31,10 +31,12 @@ let currentPlans = clone(defaultPlans);
 let selectedPlan = clone(defaultPlans[0]);
 let editingIndex = null;
 let editingSelected = false;
+let discoveredActivities = [];
 let timer;
 
 function renderPlans(plans = currentPlans) {
   currentPlans = plans;
+  discoveredActivities = [...new Map(plans.flatMap((plan) => plan.events || []).map((event) => [String(event.sourceUrl || event.title), event])).values()];
   document.getElementById('planOptions').innerHTML = plans.map((plan, index) => `
     <article class="plan-card ${index === 0 ? 'best' : ''}">
       <div class="plan-card-head">
@@ -51,6 +53,16 @@ function renderPlans(plans = currentPlans) {
       }).join('')}</div>
       <div class="plan-actions"><button class="customize-plan" data-action="customize-plan" data-index="${index}">Customize</button><button class="choose-plan" data-action="choose-plan" data-index="${index}">Use this plan</button></div>
     </article>`).join('');
+}
+
+function renderDiscoveredActivities() {
+  const list = document.getElementById('discoveredActivities');
+  if (!list) return;
+  list.innerHTML = discoveredActivities.length ? discoveredActivities.map((event, index) => `
+    <button class="discovered-activity" data-action="choose-discovered" data-index="${index}">
+      <span><b>${esc(event.title || 'Untitled event')}</b><span>${esc(event.time || 'Time flexible')} · ${esc(event.place || 'Place flexible')}</span></span>
+      <em>Add</em>
+    </button>`).join('') : '<div class="picker-empty">No discovered events are available yet. Create a custom activity instead.</div>';
 }
 
 function preferences() {
@@ -94,6 +106,8 @@ function openEditor(index = null, { selected = false } = {}) {
   document.getElementById('planName').value = seed?.title || '';
   document.getElementById('editorActivities').innerHTML = '';
   (seed?.events?.length ? seed.events : [{}]).forEach(addEditorRow);
+  document.getElementById('activityPicker').hidden = true;
+  renderDiscoveredActivities();
   show('editor');
 }
 
@@ -161,7 +175,22 @@ document.addEventListener('click', (event) => {
     if (action.dataset.action === 'choose-plan') choosePlan(index);
     if (action.dataset.action === 'customize-plan') openEditor(index);
     if (action.dataset.action === 'blank-plan') openEditor();
-    if (action.dataset.action === 'add-activity') addEditorRow();
+    if (action.dataset.action === 'open-picker') {
+      renderDiscoveredActivities();
+      document.getElementById('activityPicker').hidden = false;
+    }
+    if (action.dataset.action === 'close-picker') document.getElementById('activityPicker').hidden = true;
+    if (action.dataset.action === 'choose-discovered') {
+      const activity = discoveredActivities[index];
+      if (activity) addEditorRow(activity);
+      document.getElementById('activityPicker').hidden = true;
+      toast('Discovered event added.');
+    }
+    if (action.dataset.action === 'create-custom') {
+      addEditorRow();
+      document.getElementById('activityPicker').hidden = true;
+      document.querySelector('.editor-row:last-child .activity-title')?.focus();
+    }
     if (action.dataset.action === 'remove-activity') {
       action.closest('.editor-row').remove();
       if (!document.querySelector('.editor-row')) addEditorRow();
@@ -195,32 +224,72 @@ document.getElementById('freeBtn').onclick = (event) => {
   event.target.textContent = event.target.textContent === 'Free anyway' ? 'Marked free ✓' : 'Free anyway';
 };
 
-const feelings = {
-  focus: ['😐', 'Focus', 'You have room for a little focus, as long as it stays manageable.', '“One clear thing is enough.”'],
-  movement: ['🙂', 'Movement', 'You’re ready for something active and uplifting.', '“A little motion could shift the whole evening.”'],
-  novelty: ['😌', 'Novelty', 'Familiar and low-pressure feels best right now.', '“New can arrive gently.”'],
-  connection: ['😍', 'Connection', 'You want more connection right now, but may prefer a smaller social setting.', '“It’s okay to want connection in a gentle way.”']
+const moodNames = { focus: 'Focus', movement: 'Movement', novelty: 'Novelty', connection: 'Connection' };
+const clamp = (value, min = 0, max = 100) => Math.max(min, Math.min(max, value));
+const moodValues = (mood) => {
+  const want = clamp(parseFloat(mood.style.left) || 50);
+  const capacity = clamp(100 - (parseFloat(mood.style.top) || 50));
+  return { want, capacity };
 };
 
-function select(mood) {
+function statePhrase({ want, capacity }) {
+  if (want >= 60 && capacity >= 60) return 'Excited and ready';
+  if (want >= 60 && capacity < 60) return 'Wanting this, gently';
+  if (want < 60 && capacity >= 60) return 'Available, but not seeking';
+  return 'Not for today';
+}
+
+function updateMoodVisuals(mood) {
+  const { want, capacity } = moodValues(mood);
+  const bothHigh = want >= 60 && capacity >= 60;
+  mood.style.setProperty('--marker-size', `${Math.round(40 + want * 0.34)}px`);
+  mood.style.setProperty('--emoji-size', `${Math.round(22 + want * 0.3)}px`);
+  mood.style.setProperty('--marker-opacity', (0.78 + want * 0.0022).toFixed(2));
+  mood.style.setProperty('--halo-color', bothHigh ? '#c9eb9aa6' : '#e8e1ffb8');
+  mood.style.setProperty('--halo-spread', bothHigh ? '16px' : '11px');
+  mood.style.setProperty('--motion-duration', capacity < 18 ? '0s' : `${(8.8 - capacity * 0.06).toFixed(2)}s`);
+  mood.style.setProperty('--float-distance', `${(capacity < 18 ? 0 : 1 + capacity * 0.045).toFixed(1)}px`);
+  mood.classList.toggle('still', capacity < 18);
+}
+
+function select(mood, { dragging = false } = {}) {
   document.querySelectorAll('.mood').forEach((item) => item.classList.remove('sel'));
   mood.classList.add('sel');
-  const data = feelings[mood.dataset.k];
-  ['ff', 'fn', 'fc', 'fq'].forEach((id, index) => { document.getElementById(id).textContent = data[index]; });
-  document.getElementById('wc').textContent = parseFloat(mood.style.left) > 55 ? 'High want' : 'Low want';
-  document.getElementById('cc').textContent = parseFloat(mood.style.top) < 50 ? 'High capacity' : 'Low capacity';
+  updateMoodVisuals(mood);
+  const values = moodValues(mood);
+  const canvas = document.getElementById('grid');
+  const statusName = document.getElementById('canvasStatusName');
+  const statusState = document.getElementById('canvasStatusState');
+  if (statusName) statusName.textContent = moodNames[mood.dataset.k];
+  if (statusState) statusState.textContent = statePhrase(values);
+  if (dragging && canvas) {
+    canvas.classList.add('dragging');
+    canvas.style.setProperty('--focus-x', mood.style.left);
+    canvas.style.setProperty('--focus-y', mood.style.top);
+  }
 }
 
 document.querySelectorAll('.mood').forEach((mood) => {
-  mood.onpointerdown = (event) => { select(mood); mood.setPointerCapture(event.pointerId); };
+  updateMoodVisuals(mood);
+  mood.onpointerdown = (event) => {
+    select(mood, { dragging: true });
+    mood.setPointerCapture(event.pointerId);
+  };
   mood.onpointermove = (event) => {
     if (!mood.hasPointerCapture(event.pointerId)) return;
     const bounds = document.getElementById('grid').getBoundingClientRect();
-    mood.style.left = `${Math.max(10, Math.min(90, (event.clientX - bounds.left) / bounds.width * 100))}%`;
-    mood.style.top = `${Math.max(10, Math.min(90, (event.clientY - bounds.top) / bounds.height * 100))}%`;
-    select(mood);
+    mood.style.left = `${clamp((event.clientX - bounds.left) / bounds.width * 100, 10, 90)}%`;
+    mood.style.top = `${clamp((event.clientY - bounds.top) / bounds.height * 100, 10, 90)}%`;
+    select(mood, { dragging: true });
   };
+  mood.onpointerup = (event) => {
+    if (mood.hasPointerCapture(event.pointerId)) mood.releasePointerCapture(event.pointerId);
+    document.getElementById('grid').classList.remove('dragging');
+  };
+  mood.onpointercancel = () => document.getElementById('grid').classList.remove('dragging');
 });
+
+select(document.querySelector('.mood.sel') || document.querySelector('.mood'));
 
 renderPlans();
 renderAgenda();
@@ -244,7 +313,7 @@ if (demoMode) {
   loadRecommendations = async () => { renderPlans(clone(defaultPlans)); timer = setTimeout(() => show('results'), 7000); };
   const mood = (key, left, top) => {
     const element = document.querySelector(`.mood[data-k="${key}"]`);
-    select(element); element.style.left = `${left}%`; element.style.top = `${top}%`;
+    element.style.left = `${left}%`; element.style.top = `${top}%`; select(element);
   };
   setTimeout(() => show('planner'), 5000);
   setTimeout(() => mood('focus', 42, 31), 8000);
