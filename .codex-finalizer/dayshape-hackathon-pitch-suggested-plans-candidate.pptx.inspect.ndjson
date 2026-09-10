@@ -1,0 +1,59 @@
+{"kind":"deck","id":"pr/9m3aba","name":"Deck"}
+{"kind":"layout","layoutId":"/ppt/slideMasters/slideMaster1.xml","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"/ppt/slideLayouts/slideLayout1.xml","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/y90nupkv","slide":1,"title":"DAYSHAPE","textShapes":4}
+{"kind":"textbox","id":"sh/ts7md4r2","slide":1,"text":"DAYSHAPE","textPreview":"DAYSHAPE","textChars":8,"textLines":1,"bbox":[66,58,250,30]}
+{"kind":"textbox","id":"sh/547294r6","slide":1,"text":"Make free time\nfeel well spent","textPreview":"Make free time | feel well spent","textChars":30,"textLines":2,"bbox":[66,140,530,160]}
+{"kind":"textbox","id":"sh/k3yl0zql","slide":1,"text":"A calmer way to choose what to do, based on what you want and the energy you have.","textPreview":"A calmer way to choose what to do, based on what you want and the energy you have.","textChars":82,"textLines":1,"bbox":[70,333,475,74]}
+{"kind":"textbox","id":"sh/7qp4be9c","slide":1,"text":"Hackathon pitch","textPreview":"Hackathon pitch","textChars":15,"textLines":1,"bbox":[70,604,220,28]}
+{"kind":"image","id":"im/dkb2xcfy","slide":1,"name":"","geometry":"roundRect","bbox":[650,110,560,470]}
+{"kind":"notes","id":"nt/y90nupkv","slide":1,"text":"Open with the outcome. DayShape helps people use free time in ways that feel meaningful, without turning planning into work."}
+{"kind":"slide","id":"sl/hwbqtkby","slide":2,"title":"DAYSHAPE","textShapes":6}
+{"kind":"textbox","id":"sh/r65knqtk","slide":2,"text":"DAYSHAPE","textPreview":"DAYSHAPE","textChars":8,"textLines":1,"bbox":[64,42,260,24]}
+{"kind":"textbox","id":"sh/9072xkry","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"textbox","id":"sh/ozy1ofad","slide":2,"text":"Free time creates a\ndecision problem","textPreview":"Free time creates a | decision problem","textChars":36,"textLines":2,"bbox":[66,122,570,128]}
+{"kind":"textbox","id":"sh/b29kza94","slide":2,"text":"When the day opens up, people still need to answer three personal questions:","textPreview":"When the day opens up, people still need to answer three personal questions:","textChars":76,"textLines":1,"bbox":[70,282,560,58]}
+{"kind":"textbox","id":"sh/a10jqpsj","slide":2,"text":"What do I actually want?\nWhat do I have energy for?\nWhat can fit today?","textPreview":"What do I actually want? | What do I have energy for? | What can fit today?","textChars":71,"textLines":3,"bbox":[82,390,500,178]}
+{"kind":"textbox","id":"sh/w3i1sfa9","slide":2,"text":"A calendar can show an empty slot. It cannot tell you how to spend it.","textPreview":"A calendar can show an empty slot. It cannot tell you how to spend it.","textChars":70,"textLines":1,"bbox":[710,540,450,52]}
+{"kind":"image","id":"im/nix0be18","slide":2,"name":"","geometry":"roundRect","bbox":[710,170,460,325]}
+{"kind":"notes","id":"nt/hwbqtkby","slide":2,"text":"Most planning tools stop at availability. An empty evening is not the same as a clear decision. DayShape starts with what the person needs right now."}
+{"kind":"slide","id":"sl/ofy9wn61","slide":3,"title":"DAYSHAPE","textShapes":5}
+{"kind":"textbox","id":"sh/pcjqtg36","slide":3,"text":"DAYSHAPE","textPreview":"DAYSHAPE","textChars":8,"textLines":1,"bbox":[64,42,260,24]}
+{"kind":"textbox","id":"sh/cza94vmx","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"textbox","id":"sh/d0jax03i","slide":3,"text":"The mood map makes\npreferences visible","textPreview":"The mood map makes | preferences visible","textChars":38,"textLines":2,"bbox":[66,116,460,128]}
+{"kind":"textbox","id":"sh/298ryl4v","slide":3,"text":"Each icon sits on two simple axes: how much the person wants it and how much capacity they have for it.","textPreview":"Each icon sits on two simple axes: how much the person wants it and how much capacity they have for it.","textChars":103,"textLines":1,"bbox":[70,280,470,105]}
+{"kind":"textbox","id":"sh/3ah8rqlg","slide":3,"text":"In the demo, Focus, Novelty, Connection, and Movement all move. The selected icon updates the explanation beside it.","textPreview":"In the demo, Focus, Novelty, Connection, and Movement all move. The selected icon updates the explanation beside it.","textChars":116,"textLines":1,"bbox":[70,463,465,88]}
+{"kind":"image","id":"im/rqxozmh4","slide":3,"name":"","geometry":"roundRect","bbox":[595,116,620,460]}
+{"kind":"notes","id":"nt/ofy9wn61","slide":3,"text":"This is the core interaction. It avoids a long questionnaire and gives users a direct way to describe their current state. Mention the two axes: want and capacity."}
+{"kind":"slide","id":"sl/jyx0ra1s","slide":4,"title":"DAYSHAPE","textShapes":5}
+{"kind":"textbox","id":"sh/sna103ap","slide":4,"text":"DAYSHAPE","textPreview":"DAYSHAPE","textChars":8,"textLines":1,"bbox":[64,42,260,24]}
+{"kind":"textbox","id":"sh/1cj2d8b6","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"textbox","id":"sh/0ba143al","slide":4,"text":"Availability adds\nreal-world constraints","textPreview":"Availability adds | real-world constraints","textChars":40,"textLines":2,"bbox":[66,116,490,128]}
+{"kind":"textbox","id":"sh/rm1k7yt4","slide":4,"text":"The user chooses open time, connects a calendar if they want, and can override individual events.","textPreview":"The user chooses open time, connects a calendar if they want, and can override individual events.","textChars":97,"textLines":1,"bbox":[70,282,470,96]}
+{"kind":"textbox","id":"sh/ql8jytsj","slide":4,"text":"The goal is a plan that fits the evening, not another list to browse.","textPreview":"The goal is a plan that fits the evening, not another list to browse.","textChars":69,"textLines":1,"bbox":[70,465,450,65]}
+{"kind":"image","id":"im/y5cbel0j","slide":4,"name":"","geometry":"roundRect","bbox":[590,116,625,460]}
+{"kind":"notes","id":"nt/jyx0ra1s","slide":4,"text":"After preferences, DayShape checks the practical boundary: time. The calendar view makes the recommendation window transparent and editable."}
+{"kind":"slide","id":"sl/i107q5of","slide":5,"title":"DAYSHAPE","textShapes":5}
+{"kind":"textbox","id":"sh/032tgr6d","slide":5,"text":"DAYSHAPE","textPreview":"DAYSHAPE","textChars":8,"textLines":1,"bbox":[64,42,260,24]}
+{"kind":"textbox","id":"sh/dgbulwnm","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"textbox","id":"sh/cf2tcr61","slide":5,"text":"Matching combines\ncontext and options","textPreview":"Matching combines | context and options","textChars":37,"textLines":2,"bbox":[66,116,465,128]}
+{"kind":"textbox","id":"sh/z2tcnm5s","slide":5,"text":"DayShape considers mood, capacity, available time, and location before ranking local activities.","textPreview":"DayShape considers mood, capacity, available time, and location before ranking local activities.","textChars":96,"textLines":1,"bbox":[70,282,480,98]}
+{"kind":"textbox","id":"sh/yhkbe1o7","slide":5,"text":"The interface makes the matching process visible, so the recommendation does not feel like a black box.","textPreview":"The interface makes the matching process visible, so the recommendation does not feel like a black box.","textChars":103,"textLines":1,"bbox":[70,463,475,85]}
+{"kind":"image","id":"im/apobah8v","slide":5,"name":"","geometry":"roundRect","bbox":[594,116,620,460]}
+{"kind":"notes","id":"nt/i107q5of","slide":5,"text":"Keep this brief in the live pitch. We search for event options, use AI-assisted matching, and filter against availability. The user sees what the product is doing."}
+{"kind":"slide","id":"sl/x8f69ofe","slide":6,"title":"DAYSHAPE","textShapes":5}
+{"kind":"textbox","id":"sh/7m98ru9g","slide":6,"text":"DAYSHAPE","textPreview":"DAYSHAPE","textChars":8,"textLines":1,"bbox":[64,42,260,24]}
+{"kind":"textbox","id":"sh/yhg7epsj","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"textbox","id":"sh/zi98nu94","slide":6,"text":"Recommendations\nwith a reason","textPreview":"Recommendations | with a reason","textChars":29,"textLines":2,"bbox":[66,116,450,128]}
+{"kind":"textbox","id":"sh/87ipkzal","slide":6,"text":"Each pick shows time, distance, cost, tags, and a match score. The user can see why it belongs in their evening.","textPreview":"Each pick shows time, distance, cost, tags, and a match score. The user can see why it belongs in their evening.","textChars":112,"textLines":1,"bbox":[70,282,465,102]}
+{"kind":"textbox","id":"sh/98rqt4r6","slide":6,"text":"Live demo cue\nPlay the DayShape video here. It stays on each screen long enough to narrate the flow.","textPreview":"Live demo cue | Play the DayShape video here. It stays on each screen long enough to narrate the flow.","textChars":100,"textLines":2,"bbox":[70,470,470,94]}
+{"kind":"image","id":"im/lwn2dc3m","slide":6,"name":"","geometry":"roundRect","bbox":[580,116,635,460]}
+{"kind":"notes","id":"nt/x8f69ofe","slide":6,"text":"Play the 59-second DayShape demo here. Let the results screen breathe, then transition to the final plan. Keep the phone on silent and use its speaker notes only as a timing cue."}
+{"kind":"slide","id":"sl/gnmp4jqx","slide":7,"title":"DAYSHAPE","textShapes":5}
+{"kind":"textbox","id":"sh/l0vuh0rm","slide":7,"text":"DAYSHAPE","textPreview":"DAYSHAPE","textChars":8,"textLines":1,"bbox":[64,42,260,24]}
+{"kind":"textbox","id":"sh/cb2tkvap","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1160,42,56,24]}
+{"kind":"textbox","id":"sh/dcbud0ra","slide":7,"text":"Suggested plans\nfor tonight","textPreview":"Suggested plans | for tonight","textChars":27,"textLines":2,"bbox":[66,112,590,132]}
+{"kind":"textbox","id":"sh/ydkbm5sv","slide":7,"text":"DayShape offers a few options that fit the user’s mood, available time, and location.","textPreview":"DayShape offers a few options that fit the user’s mood, available time, and location.","textChars":85,"textLines":1,"bbox":[70,287,520,96]}
+{"kind":"textbox","id":"sh/zedcfa9g","slide":7,"text":"Choose what feels right, then make it your plan.","textPreview":"Choose what feels right, then make it your plan.","textChars":48,"textLines":1,"bbox":[70,500,490,42]}
+{"kind":"image","id":"im/rul4vapk","slide":7,"name":"","geometry":"roundRect","alt":"DayShape suggested plans","bbox":[642,110,570,475]}
+{"kind":"notes","id":"nt/gnmp4jqx","slide":7,"text":"Close with choice, not a fixed itinerary. DayShape offers a short set of suggested plans that already fit the person’s mood, availability, and location. The user keeps control by choosing the option that feels right. Invite questions after this slide."}
