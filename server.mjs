@@ -97,14 +97,14 @@ function balancedCandidates(events, limit) {
   return candidates;
 }
 
-async function tavilySearch(location) {
+async function tavilySearch(location, date) {
   const tavilyKey = process.env.TAVILY_API_KEY;
   if (!tavilyKey) throw new Error('TAVILY_API_KEY is not configured in .env');
   const response = await fetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: { authorization: `Bearer ${tavilyKey}`, 'content-type': 'application/json' },
     body: JSON.stringify({
-      query: `Find real, current events and bookable activities in ${location} taking place now or in the coming weeks. Search trustworthy organizer, venue, ticketing, cultural institution, and local event directory pages. Return direct source URLs plus titles, dates, times, venues, categories, prices, descriptions, and image URLs when available.`,
+      query: `Find real, current events and bookable activities in ${location} taking place on ${date}. Search trustworthy organizer, venue, ticketing, cultural institution, and local event directory pages. Return direct source URLs plus titles, dates, times, venues, categories, prices, descriptions, and image URLs when available.`,
       search_depth: 'advanced',
       max_results: 20,
       include_raw_content: false
@@ -115,7 +115,7 @@ async function tavilySearch(location) {
   return data.results || [];
 }
 
-async function recommendations(location, preferences = {}) {
+async function recommendations(location, date, preferences = {}) {
   const preferenceSummary = Object.fromEntries(
     ['focus', 'movement', 'novelty', 'connection'].map((key) => {
       const value = preferences[key] || {};
@@ -125,7 +125,7 @@ async function recommendations(location, preferences = {}) {
       }];
     })
   );
-  const cacheKey = `${location.toLowerCase()}:${JSON.stringify(preferenceSummary)}`;
+  const cacheKey = `${location.toLowerCase()}:${date}:${JSON.stringify(preferenceSummary)}`;
   const cached = recommendationCache.get(cacheKey);
   if (cached && Date.now() - cached.createdAt < 5 * 60_000) return { ...cached.value, cached: true };
   const openRouterKey = process.env.OPENROUTER_API_KEY;
@@ -138,7 +138,7 @@ async function recommendations(location, preferences = {}) {
           return { events: [], total: 0 };
         })
       : Promise.resolve({ events: [], total: 0 }),
-    tavilySearch(location)
+    tavilySearch(location, date)
   ]);
   if (!catalog.events.length && !search.length) throw new Error('No live event sources returned results');
 
@@ -162,7 +162,7 @@ async function recommendations(location, preferences = {}) {
     sourceUrl: result.url,
     content: String(result.content || '').slice(0, 1200)
   }));
-  const prompt = `Today is ${new Date().toISOString().slice(0, 10)}. Create exactly ${PLAN_LIMIT} distinct possible free-time plans in ${location} from the real source material below. Tavily web search is the primary discovery source. Optional OnHuddle API candidates may also be supplied. Each plan must have a clear personality and 2-3 compatible activities; make the plans meaningfully different, not merely reordered copies. Use the user's want/capacity signals to vary intensity while still offering choice: ${JSON.stringify(preferenceSummary)}. Return ONLY JSON as {"plans":[{"title":"","theme":"","summary":"","score":90,"events":[{"title":"","time":"","place":"","cost":"","category":"","tags":[""],"desc":"","score":90,"sourceUrl":"","img":""}]}]}. Scores must be 1-99. Exclude events that have already ended. Every event must be supported by one supplied result. Copy its sourceUrl exactly, copy an image URL exactly when one is supplied, and otherwise use an empty img. Never invent an event or factual detail. Avoid reusing an activity across plans when enough candidates exist, and never repeat an activity inside a plan. Tavily results: ${JSON.stringify(tavilyContext)}. Optional OnHuddle candidates (${huddleContext.length} selected from ${catalog.events.length} of reported total ${catalog.total}): ${JSON.stringify(huddleContext)}`;
+  const prompt = `Today is ${new Date().toISOString().slice(0, 10)}. Create exactly ${PLAN_LIMIT} distinct possible free-time plans in ${location} for ${date} from the real source material below. Tavily web search is the primary discovery source. Optional OnHuddle API candidates may also be supplied. Each plan must have a clear personality and 2-3 compatible activities; make the plans meaningfully different, not merely reordered copies. Use the user's want/capacity signals to vary intensity while still offering choice: ${JSON.stringify(preferenceSummary)}. Return ONLY JSON as {"plans":[{"title":"","theme":"","summary":"","score":90,"events":[{"title":"","time":"","place":"","cost":"","category":"","tags":[""],"desc":"","score":90,"sourceUrl":"","img":""}]}]}. Scores must be 1-99. Include only activities actually available on ${date}; do not use events that have already ended or events only scheduled for a different day. Every event must be supported by one supplied result. Copy its sourceUrl exactly, copy an image URL exactly when one is supplied, and otherwise use an empty img. Never invent an event or factual detail. Avoid reusing an activity across plans when enough candidates exist, and never repeat an activity inside a plan. Tavily results: ${JSON.stringify(tavilyContext)}. Optional OnHuddle candidates (${huddleContext.length} selected from ${catalog.events.length} of reported total ${catalog.total}): ${JSON.stringify(huddleContext)}`;
   let messages = [{ role: 'user', content: prompt }];
   let parsed;
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -261,17 +261,28 @@ const server = createServer(async (req, res) => {
     if (req.method === 'POST' && req.url === '/api/recommendations') {
       const data = await body(req);
       const location = String(data.location || '').trim().slice(0, 100);
+      const date = String(data.date || '').trim();
       if (!location) return json(res, 400, { error: 'Choose a location first.' });
-      return json(res, 200, await recommendations(location, data.preferences));
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(new Date(`${date}T12:00:00Z`).getTime())) return json(res, 400, { error: 'Choose a valid date first.' });
+      return json(res, 200, await recommendations(location, date, data.preferences));
     }
     if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Method not allowed' });
     const pathname = decodeURIComponent((req.url || '/').split('?')[0]);
     const requested = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
     const safe = normalize(requested).replace(/^(\.\.(\/|\\|$))+/, '');
-    const file = join(root, safe);
-    if (!file.startsWith(root)) return json(res, 403, { error: 'Forbidden' });
-    const data = await readFile(file);
-    res.writeHead(200, { 'content-type': mime[extname(file)] || 'application/octet-stream' });
+    const distRoot = join(root, 'dist');
+    const file = join(distRoot, safe);
+    if (!file.startsWith(distRoot)) return json(res, 403, { error: 'Forbidden' });
+    let data;
+    let contentFile = file;
+    try {
+      data = await readFile(file);
+    } catch (error) {
+      if (error.code !== 'ENOENT' || extname(safe)) throw error;
+      contentFile = join(distRoot, 'index.html');
+      data = await readFile(contentFile);
+    }
+    res.writeHead(200, { 'content-type': mime[extname(contentFile)] || 'application/octet-stream' });
     if (req.method === 'HEAD') return res.end();
     res.end(data);
   } catch (error) {

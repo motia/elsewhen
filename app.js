@@ -33,6 +33,113 @@ let editingIndex = null;
 let editingSelected = false;
 let discoveredActivities = [];
 let timer;
+const plansStorageKey = 'elsewhen.saved-plans';
+const localISODate = (date = new Date()) => {
+  const offset = date.getTimezoneOffset() * 60_000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+};
+const isISODate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T12:00:00`).getTime());
+const userLocale = navigator.languages?.[0] || navigator.language || 'en-US';
+const formatPlanDate = (value, options = { day: '2-digit', month: '2-digit', year: 'numeric' }) =>
+  new Intl.DateTimeFormat(userLocale, options).format(new Date(`${value}T12:00:00`));
+let selectedPlanDate = isISODate(localStorage.getItem('elsewhen.selected-date')) ? localStorage.getItem('elsewhen.selected-date') : localISODate();
+let savedPlans = (() => {
+  try { return JSON.parse(localStorage.getItem(plansStorageKey) || '[]'); } catch { return []; }
+})();
+
+function selectedLocation() {
+  return document.getElementById('location')?.value || 'Ho Chi Minh City';
+}
+
+function dateStampedDefaultPlans() {
+  const formatted = formatPlanDate(selectedPlanDate);
+  return clone(defaultPlans).map((plan) => ({
+    ...plan,
+    events: plan.events.map((event) => ({ ...event, time: String(event.time || '').replace(/^[^·]+/, formatted) }))
+  }));
+}
+
+function updatePlanningContext() {
+  const formatted = formatPlanDate(selectedPlanDate);
+  document.getElementById('date').textContent = formatted;
+  document.getElementById('selectedDate').value = selectedPlanDate;
+  const homeDateLabel = document.getElementById('homeDateLabel');
+  if (homeDateLabel) homeDateLabel.textContent = formatted;
+  const plansDate = document.getElementById('plansDate');
+  if (plansDate) plansDate.value = selectedPlanDate;
+  const plansDateLabel = document.getElementById('plansDateLabel');
+  if (plansDateLabel) plansDateLabel.textContent = formatted;
+  document.querySelectorAll('[data-plan-context]').forEach((element) => {
+    element.innerHTML = `<span>⌖ <b>${esc(selectedLocation())}</b></span><span>▣ <b>${esc(formatted)}</b></span>`;
+  });
+  const calendarTitle = document.querySelector('#availability .dayhead strong');
+  if (calendarTitle) calendarTitle.textContent = formatPlanDate(selectedPlanDate, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+  const subtitle = document.getElementById('resultsSubtitle');
+  if (subtitle) subtitle.textContent = `Here are a few ways to spend ${formatPlanDate(selectedPlanDate, { weekday: 'long', month: 'long', day: 'numeric' })} in ${selectedLocation()}.`;
+}
+
+function setPlanningDate(value) {
+  if (!isISODate(value)) return;
+  selectedPlanDate = value;
+  localStorage.setItem('elsewhen.selected-date', value);
+  updatePlanningContext();
+  renderSavedPlans();
+}
+
+function shiftPlanningDate(days) {
+  const date = new Date(`${selectedPlanDate}T12:00:00`);
+  date.setDate(date.getDate() + days);
+  setPlanningDate(localISODate(date));
+}
+
+function createHomeDatePicker() {
+  const input = document.getElementById('selectedDate');
+  const control = input?.closest('.search-field');
+  if (!input || !control) return;
+  input.remove();
+  control.classList.add('date-picker');
+  control.replaceChildren();
+  control.insertAdjacentHTML('beforeend', '<span aria-hidden="true">▣</span><span id="homeDateLabel">Select date</span>');
+  control.append(input);
+}
+
+function createPlansScreen() {
+  const screen = document.createElement('section');
+  screen.className = 'screen plans';
+  screen.id = 'plans';
+  screen.innerHTML = `<div class="inner"><div class="plan-context" data-plan-context></div><div class="title-row"><div><h2>Your plans</h2><p class="sub">Browse the plans you’ve saved for each day.</p></div><div class="plans-header-actions"><div class="date-picker date-picker-compact" aria-label="Browse plans by date"><button data-action="previous-date" aria-label="Previous date">‹</button><label><span aria-hidden="true">▣</span><span id="plansDateLabel">Select date</span><input id="plansDate" type="date" aria-label="Browse plans by date"></label><button data-action="next-date" aria-label="Next date">›</button></div><button class="edit" data-go="home">＋ &nbsp;New plan</button></div></div><div class="plans-browser"><div class="saved-plans" id="savedPlans"></div></div></div>`;
+  document.querySelector('.stage').append(screen);
+}
+
+function renderSavedPlans() {
+  const list = document.getElementById('savedPlans');
+  if (!list) return;
+  const plansForDate = savedPlans.filter((plan) => plan.date === selectedPlanDate);
+  list.innerHTML = plansForDate.length ? plansForDate.map((plan) => `<article class="saved-plan"><div><span class="plan-theme">${esc(plan.theme || 'Personal')}</span><h3>${esc(plan.title || 'Untitled plan')}</h3><p>${esc(plan.location || 'Location flexible')} · ${(plan.events || []).length} ${(plan.events || []).length === 1 ? 'activity' : 'activities'}</p></div><button class="soft" data-action="open-saved-plan" data-id="${esc(plan.savedId)}">Open</button></article>`).join('') : `<div class="plans-empty"><h3>No saved plans for ${esc(formatPlanDate(selectedPlanDate, { month: 'long', day: 'numeric' }))}</h3><p>Choose a plan and save it here when you’re ready.</p><button class="soft" data-go="home">Plan this day</button></div>`;
+}
+
+function saveSelectedPlan() {
+  if (!selectedPlan?.events?.length) return toast('Add at least one activity before saving.');
+  const savedId = selectedPlan.savedId || `saved-${Date.now()}`;
+  const plan = { ...clone(selectedPlan), savedId, date: selectedPlanDate, location: selectedLocation(), savedAt: new Date().toISOString() };
+  const existing = savedPlans.findIndex((item) => item.savedId === savedId);
+  if (existing >= 0) savedPlans[existing] = plan;
+  else savedPlans.unshift(plan);
+  selectedPlan = clone(plan);
+  localStorage.setItem(plansStorageKey, JSON.stringify(savedPlans));
+  renderSavedPlans();
+  toast('Saved to your plans.');
+}
+
+function openSavedPlan(id) {
+  const plan = savedPlans.find((item) => item.savedId === id);
+  if (!plan) return;
+  if (isISODate(plan.date)) setPlanningDate(plan.date);
+  if (plan.location) document.getElementById('location').value = plan.location;
+  selectedPlan = clone(plan);
+  updatePlanningContext();
+  show('agenda');
+}
 
 function renderPlans(plans = currentPlans) {
   currentPlans = plans;
@@ -78,13 +185,13 @@ async function loadRecommendations() {
     const response = await fetch('/api/recommendations', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ location: document.getElementById('location').value, preferences: preferences() })
+      body: JSON.stringify({ location: selectedLocation(), date: selectedPlanDate, preferences: preferences() })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Search failed');
-    renderPlans(data.plans?.length ? data.plans : clone(defaultPlans));
+    renderPlans(data.plans?.length ? data.plans : dateStampedDefaultPlans());
   } catch (error) {
-    renderPlans(clone(defaultPlans));
+    renderPlans(dateStampedDefaultPlans());
     toast('Using curated plans while live planning is unavailable.');
   }
   timer = setTimeout(() => show('results'), Math.max(0, 1500 - (Date.now() - started)));
@@ -136,8 +243,8 @@ function saveEditedPlan() {
 
 function choosePlan(index) {
   selectedPlan = clone(currentPlans[index]);
-  renderAgenda();
-  show('agenda');
+  saveSelectedPlan();
+  show('plans');
 }
 
 function renderAgenda() {
@@ -150,15 +257,16 @@ function renderAgenda() {
   }).join('') : '<div class="empty-agenda">This plan is empty. <button class="soft" data-action="edit-selected">Add an activity</button></div>';
 }
 
-const screens = [...document.querySelectorAll('.screen')];
+let screens = [...document.querySelectorAll('.screen')];
 const nav = [...document.querySelectorAll('.nav button[data-go]')];
 function show(id) {
   clearTimeout(timer);
   screens.forEach((screen) => screen.classList.toggle('active', screen.id === id));
-  nav.forEach((button) => button.classList.toggle('active', button.dataset.go === (['planner', 'availability', 'matching', 'results', 'editor'].includes(id) ? 'planner' : id)));
+  nav.forEach((button) => button.classList.toggle('active', button.dataset.go === (['planner', 'availability', 'matching', 'results', 'editor', 'agenda'].includes(id) ? 'planner' : id)));
   document.querySelector('.stage').scrollTop = 0;
   if (id === 'matching') loadRecommendations();
   if (id === 'agenda') renderAgenda();
+  if (id === 'plans') renderSavedPlans();
 }
 
 function toast(message) {
@@ -196,7 +304,11 @@ document.addEventListener('click', (event) => {
       if (!document.querySelector('.editor-row')) addEditorRow();
     }
     if (action.dataset.action === 'save-plan') saveEditedPlan();
+    if (action.dataset.action === 'save-to-plans') saveSelectedPlan();
     if (action.dataset.action === 'edit-selected') openEditor(null, { selected: true });
+    if (action.dataset.action === 'previous-date') shiftPlanningDate(-1);
+    if (action.dataset.action === 'next-date') shiftPlanningDate(1);
+    if (action.dataset.action === 'open-saved-plan') openSavedPlan(action.dataset.id);
     if (action.dataset.action === 'remove-agenda') {
       selectedPlan.events.splice(index, 1);
       renderAgenda();
@@ -291,9 +403,37 @@ document.querySelectorAll('.mood').forEach((mood) => {
 
 select(document.querySelector('.mood.sel') || document.querySelector('.mood'));
 
+createHomeDatePicker();
+createPlansScreen();
+screens = [...document.querySelectorAll('.screen')];
+document.querySelectorAll('.screen:not(#home) .inner').forEach((inner) => {
+  if (!inner.querySelector('[data-plan-context]')) inner.insertAdjacentHTML('afterbegin', '<div class="plan-context" data-plan-context></div>');
+});
 renderPlans();
 renderAgenda();
-document.getElementById('date').textContent = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date());
+const storedLocation = localStorage.getItem('elsewhen.selected-location');
+if (storedLocation && [...document.getElementById('location').options].some((option) => option.value === storedLocation)) document.getElementById('location').value = storedLocation;
+updatePlanningContext();
+document.getElementById('selectedDate').addEventListener('change', (event) => setPlanningDate(event.target.value));
+document.getElementById('plansDate').addEventListener('change', (event) => setPlanningDate(event.target.value));
+document.getElementById('location').addEventListener('change', () => {
+  localStorage.setItem('elsewhen.selected-location', selectedLocation());
+  updatePlanningContext();
+});
+const availabilityDayHeader = document.querySelector('#availability .dayhead');
+const availabilityPrevious = availabilityDayHeader?.querySelector('button.back');
+const availabilityNext = availabilityDayHeader?.querySelector('span');
+const availabilityToday = availabilityDayHeader?.querySelector('button.soft');
+if (availabilityPrevious) availabilityPrevious.onclick = () => shiftPlanningDate(-1);
+if (availabilityNext) {
+  availabilityNext.setAttribute('role', 'button');
+  availabilityNext.setAttribute('tabindex', '0');
+  availabilityNext.setAttribute('aria-label', 'Next date');
+  availabilityNext.style.cursor = 'pointer';
+  availabilityNext.onclick = () => shiftPlanningDate(1);
+  availabilityNext.onkeydown = (event) => { if (event.key === 'Enter' || event.key === ' ') shiftPlanningDate(1); };
+}
+if (availabilityToday) availabilityToday.onclick = () => setPlanningDate(localISODate());
 fetch('/api/status').then((response) => response.json()).then((status) => {
   const state = document.getElementById('apiState');
   state.classList.toggle('ready', status.configured);
@@ -301,16 +441,17 @@ fetch('/api/status').then((response) => response.json()).then((status) => {
 }).catch(() => { document.querySelector('#apiState span').textContent = 'Curated plans'; });
 fetch('/api/cities').then((response) => response.json()).then((data) => {
   const select = document.getElementById('location');
-  const current = select.value;
+  const current = localStorage.getItem('elsewhen.selected-location') || select.value;
   const cities = data.cities || [];
   if (!cities.length) return;
   select.innerHTML = cities.map((city) => `<option value="${esc(city.display_name)}">${esc(city.display_name)} (${Number(city.event_count).toLocaleString()})</option>`).join('');
   if ([...select.options].some((option) => option.value === current)) select.value = current;
+  updatePlanningContext();
 }).catch(() => {});
 
 const demoMode = new URLSearchParams(location.search).has('demo');
 if (demoMode) {
-  loadRecommendations = async () => { renderPlans(clone(defaultPlans)); timer = setTimeout(() => show('results'), 7000); };
+  loadRecommendations = async () => { renderPlans(dateStampedDefaultPlans()); timer = setTimeout(() => show('results'), 7000); };
   const mood = (key, left, top) => {
     const element = document.querySelector(`.mood[data-k="${key}"]`);
     element.style.left = `${left}%`; element.style.top = `${top}%`; select(element);

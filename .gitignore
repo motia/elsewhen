@@ -3,4 +3,5 @@
 !.env.example
 *.swp
 node_modules/
-
+dist/
+*.tsbuildinfo
